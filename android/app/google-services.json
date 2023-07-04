@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "288497220865",
+    "project_id": "chargeover-929eb",
+    "storage_bucket": "chargeover-929eb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288497220865:android:91a601662ba31ab4336f00",
+        "android_client_info": {
+          "package_name": "com.example.chargeover"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "288497220865-6h2eks5l6170ijavs5ushph7dajnh1n7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAH32pKqUsYHeWWGU-AwAIXtl2s1XHoKrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "288497220865-6h2eks5l6170ijavs5ushph7dajnh1n7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
