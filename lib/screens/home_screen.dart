@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:chargeover/controllers/home_controller.dart';
 import 'package:chargeover/screens/add_marker_screen.dart';
 import 'package:chargeover/utils/extensions.dart';
@@ -44,20 +42,21 @@ class HomeScreen extends GetView<HomeController> {
                 child: GetBuilder<HomeController>(
                     id: 'map',
                     builder: (cont) {
-                      log(cont.markers.length.toString());
-                      log('${cont.markers.last.markerId.value}${cont.markers.last.position.latitude}${cont.markers.last.position.latitude}');
-                      return GoogleMap(
-                          onMapCreated: (controller) {
-                            cont.mapController = controller;
-                          },
-                          markers: cont.markers,
-                          zoomControlsEnabled: false,
-                          polylines: Set<Polyline>.of(controller.route.values),
-                          initialCameraPosition: CameraPosition(
-                              zoom: 14,
-                              target: LatLng(
-                                  controller.currnetPostion!.latitude,
-                                  controller.currnetPostion!.longitude)));
+                      return cont.initialCameraPosition == null
+                          ? Center(
+                              child: Text('Loading'),
+                            )
+                          : GoogleMap(
+                              onMapCreated: (controller) {
+                                cont.mapController = controller;
+                              },
+                              markers: cont.markers,
+                              zoomControlsEnabled: false,
+                              polylines:
+                                  Set<Polyline>.of(controller.route.values),
+                              initialCameraPosition:
+                                  controller.initialCameraPosition!,
+                            );
                     }),
               ),
             ],
@@ -83,6 +82,53 @@ class HomeScreen extends GetView<HomeController> {
             Get.to(const SearchPlaces());
           },
           child: const Icon(Icons.add),
+        ),
+        10.w.spaceH,
+        FloatingActionButton(
+          heroTag: 'search city fab',
+          onPressed: () {
+            showModalBottomSheet(
+              constraints: BoxConstraints(
+                minHeight: ScreenUtil().screenHeight / 2,
+                minWidth: ScreenUtil().screenWidth,
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r)),
+              context: context,
+              builder: (context) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      TypeAheadFormField(
+                        onSuggestionSelected: (suggestion) {
+                          controller.mapController.animateCamera(
+                              CameraUpdate.newCameraPosition(CameraPosition(
+                                  zoom: 16,
+                                  target: LatLng(suggestion.location.latitude,
+                                      suggestion.location.longitude))));
+                          Get.back();
+                        },
+                        itemBuilder: (context, itemData) {
+                          return ListTile(
+                            title: Text(itemData.name),
+                          );
+                        },
+                        suggestionsCallback: (pattern) {
+                          return controller.cities.where((element) => element
+                              .name
+                              .toLowerCase()
+                              .contains(pattern.toLowerCase()));
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: const Icon(Icons.location_city),
         ),
       ],
     );
@@ -142,6 +188,10 @@ class HomeScreen extends GetView<HomeController> {
                           controller.start = LatLng(
                               suggestion.position.latitude,
                               suggestion.position.longitude);
+
+                          controller.sourceController.text =
+                              suggestion.markerId.value;
+                          controller.sourceFocus.nextFocus();
                         },
                       ),
                     ),
@@ -180,6 +230,9 @@ class HomeScreen extends GetView<HomeController> {
                         onSuggestionSelected: (suggestion) {
                           controller.end = LatLng(suggestion.position.latitude,
                               suggestion.position.longitude);
+                          controller.destinationController.text =
+                              suggestion.markerId.value;
+                          controller.destiantionFocus.unfocus();
                         },
                       ),
                     ),
@@ -189,6 +242,7 @@ class HomeScreen extends GetView<HomeController> {
                 onPressed: () {
                   controller.getDirections();
                   controller.trackLocation();
+                  Get.back();
                 },
                 child: const Text('Start Tracking'),
               )),
@@ -196,6 +250,9 @@ class HomeScreen extends GetView<HomeController> {
                   child: ElevatedButton(
                 onPressed: () {
                   controller.livePostionSubscirtion.cancel();
+                  controller.route = {};
+                  controller.update(['map']);
+                  Get.back();
                 },
                 child: const Text('Stop Tracking'),
               )),

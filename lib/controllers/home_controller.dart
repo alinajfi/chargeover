@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/city.dart';
 import '../models/place_predictions.dart';
 
 class HomeController extends GetxController {
@@ -16,6 +17,7 @@ class HomeController extends GetxController {
   var baseUrl = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
   String? sessionToken;
   List<PlacesPrediction> placesList = [];
+  CameraPosition? initialCameraPosition;
 
   Position? currnetPostion;
   final Set<Polyline> polylines = {};
@@ -24,6 +26,8 @@ class HomeController extends GetxController {
   late TextEditingController sourceController;
   late TextEditingController destinationController;
   late TextEditingController searchPlaces;
+  late FocusNode sourceFocus;
+  late FocusNode destiantionFocus;
   late GoogleMapController mapController;
   late Stream<Position> livePostion;
   late StreamSubscription<Position> livePostionSubscirtion;
@@ -39,6 +43,8 @@ class HomeController extends GetxController {
     sourceController = TextEditingController();
     destinationController = TextEditingController();
     searchPlaces = TextEditingController();
+    destiantionFocus = FocusNode();
+    sourceFocus = FocusNode();
     _determinePosition();
 
     sourceController = TextEditingController();
@@ -58,10 +64,19 @@ class HomeController extends GetxController {
           position:
               LatLng(trackerPostion!.latitude, trackerPostion!.longitude));
       markers = updateMarkers(liveMarker);
+      mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+          zoom: 14,
+          target:
+              LatLng(trackerPostion!.latitude, trackerPostion!.longitude))));
 
       update(['map']);
     });
   }
+
+  List<City> cities = [
+    City(name: 'Multan', location: LatLng(30.1575, 71.5249)),
+    City(name: 'Bahawalpur', location: LatLng(29.3544, 71.6911)),
+  ];
 
   Set<Marker> updateMarkers(Marker marker) {
     markers = constMarkers;
@@ -71,7 +86,7 @@ class HomeController extends GetxController {
         return e.mapsId.toString();
       },
     ).toList();
-    log(newList.toString());
+    // log(newList.toString());
     update(['map']);
     return markers;
   }
@@ -97,6 +112,10 @@ class HomeController extends GetxController {
       log('Location permissions are permanently denied, we cannot request permissions.');
     }
     currnetPostion = await Geolocator.getCurrentPosition();
+    initialCameraPosition = CameraPosition(
+      zoom: 14,
+      target: LatLng(currnetPostion!.latitude, currnetPostion!.longitude),
+    );
     markers = updateMarkers(Marker(
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         infoWindow: const InfoWindow(title: 'current Locatioon'),
@@ -127,6 +146,9 @@ class HomeController extends GetxController {
       log(result.errorMessage.toString());
     }
     addPolyLine(polylineCoordinates);
+    mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+        zoom: 10, target: LatLng(start!.latitude, start!.longitude))));
+    update(['map']);
   }
 
   addPolyLine(List<LatLng> polylineCoordinates) {
